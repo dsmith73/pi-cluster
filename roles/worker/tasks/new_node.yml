@@ -1,0 +1,97 @@
+---
+
+
+- name: "var array - size"
+  debug:
+    msg: "{{ CLUSTER_NODES | length }}"
+  register: array_size
+# - name: "var group - size"
+#   debug:
+#     msg: "{{ array_size.msg | int }}"
+
+- name: "hosts array - size"
+  debug:
+    msg: "{{ groups.workers | length }}"
+  register: group_size
+# - name: "hosts group : size"
+#   debug:
+#     msg: "{{ group_size.msg | int }}"  
+
+- name: "compare var to hosts"
+  set_fact:
+    last_node: "{{ array_size.msg | int }}"
+  when: (array_size.msg | int == group_size.msg | int)
+
+
+- name: "create - new hostname and ip"
+  block:
+  - name: "convert to int"
+    set_fact:
+      convert_number: '{{ lt_ten[last_node | int ] + 1 }}'
+    when: (last_node | int < 10)
+  - name: "convert to int"
+    set_fact:
+      convert_number: '{{ last_node | int + 1 }}'
+    when: (last_node | int > 10)
+  # - name: "show the number"
+  #   debug:
+  #     var: "{{ convert_number | int }}"
+  - name: 'lt 10'
+    set_fact:
+      new_hostname: "{{ item }}.{{ CLUSTER_DOMAIN }}"
+      # cacheable: yes
+    with_sequence: start={{ convert_number }} count=1 stride=1 format=n0%01d
+    when: (convert_number | int < 10)
+  - name: 'gt 10 - lt 100'
+    set_fact:
+      new_hostname: "{{ item }}.{{ CLUSTER_DOMAIN }}"
+      # cacheable: yes
+    with_sequence: start={{ convert_number }} count=1 stride=1 format=n%02d
+    when: (convert_number | int > 9) and (convert_number | int < 100)
+  - name: 'gt 100'
+    set_fact:
+      new_hostname: "{{ item }}.{{ CLUSTER_DOMAIN }}"
+      # cacheable: yes
+    with_sequence: start={{ convert_number }} count=1 stride=1 format=n%03d
+    when: (convert_number | int > 99)
+  - name: 'create new host ip'
+    set_fact:
+      new_host_ip: "{{ CLUSTER_IP_SUBNET | ipmath(convert_number | int + 10) }}"
+
+  when: ( CREATE_NEW == true )
+
+- name: "reuse - new hostname and ip"
+  block:
+  - name: "ansible_default_ipv4.address"
+    debug:
+      msg: "{{ hostvars['{{ NODE_NAME }}.{{ CLUSTER_DOMAIN }}']['ansible_default_ipv4']['address'] }}"
+    register: ds_ip4
+  - name: "using {{ NODE_NAME }}"
+    set_fact:
+      new_hostname: "{{ NODE_NAME }}.{{ CLUSTER_DOMAIN }}"
+      new_host_ip: "{{ ds_ip4 | first }}"
+
+  when: ( CREATE_NEW == false )
+
+- name: "show - hostname and ip"
+  debug:
+    msg: "hostname : {{ new_hostname }}\nip : {{ new_host_ip }}"
+
+# standard regex in this module  
+- name: "verify hostname exists in hosts file on ansible master"
+  lineinfile:
+    path: "{{ inventory_dir }}/hosts"
+    line: "{{ new_hostname }}"
+    insertafter: '^\D\sANSIBLE\s\w+\sWORKER'
+    state: present
+  delegate_to: localhost
+
+# add to the var file also  
+- name: "verify hostname exists in vars file"
+  lineinfile:
+    path: "{{ playbook_dir }}/vars.yml"
+    line: '  - "{{ new_host_ip }} {{ new_hostname }}"'
+    insertafter: '^\D\sANSIBLE\s\w+\sCLUSTER'
+    state: present
+  delegate_to: localhost
+

@@ -1,0 +1,69 @@
+---
+
+#- name: "verify apps installed"
+#  apt: 
+#    name: python
+    #sudo apt-get install python3 -y
+
+- name: "CREATE - hostname and ip"
+  include_tasks: 
+    file: new_node.yml
+    apply:
+      tags:
+        - hostname
+        - setup
+
+- name: "VALIDATE - hostname and ip - {{ new_hostname }} {{ new_host_ip }}"
+  include_tasks: 
+    file: set_hostname.yml
+    apply:
+      tags:
+        - hostname
+        - setup
+
+- name: "SETUP - service accounts"
+  include_tasks: 
+    file: set_accounts.yml
+    apply:
+      tags:
+        - account
+        - service
+        - setup
+
+- name: "SETUP - cluster config"
+  include_tasks: 
+    file: set_cluster_config.yml
+    apply:
+      tags:
+        - cluster
+        - config
+        - setup
+
+- name: "VALIDATE - dietpi.txt"
+  include_tasks: 
+    file: validate_dietpi_txt.yml
+    apply:
+      tags:
+        - dietpi
+        - config
+        - setup
+
+- name: "SETUP - cluster apps"
+  include_tasks: 
+    file: set_cluster_apps.yml
+    apply:
+      tags:
+        - cluster
+        - apps
+        - setup
+
+
+
+
+
+# verify the systemd & ssh service started correctly  
+# handler 
+- name: "worker - restart"
+  shell: shutdown -r
+
+

@@ -1,0 +1,61 @@
+---
+
+- name: "CHECK - swap"
+  block:
+  - name: "CHECK - swap with grep"
+    shell: free |grep "Swap:"
+    register: grep_out
+
+  - name: "GET - swap size"
+    set_fact:
+      swap_size: "{{ grep_out.stdout | regex_findall('Swap:\\s+(\\d+)\\s+') }}"
+
+  - name: "SHOW - swap size"
+    debug:
+      msg: "{{ swap_size }}"
+  
+- name: "DISABLE - dietpi swap"
+  block:
+  - name: "swap - OFF"
+    shell: swapoff -a
+
+  - name: "/boot/dietpi.txt - swap 0"
+    lineinfile:
+      path: /boot/dietpi.txt
+      regexp: '^AUTO_SETUP_SWAPFILE_SIZE=.+$'
+      line: 'AUTO_SETUP_SWAPFILE_SIZE=0'
+  # Turn off swap  
+    # - name: "turn off swap"
+    #   shell: |
+    #     "sudo dphys-swapfile swapoff && \
+    #     sudo dphys-swapfile uninstall && \
+    #     sudo update-rc.d dphys-swapfile remove"
+  # For Debian, also run:  
+    ## sudo systemctl disable dphys-swapfile
+  when: ( swap_size | int != 0 )
+
+# enable container features  
+# cat /boot/commandline.txt into a var  
+- name: "read cmdline.txt into register"
+  command: cat /boot/cmdline.txt
+  register: cmdln
+
+# append to the end of the line (do not insert new line or hit enter)  
+- name: "enable container features by appending {{ ENABLE_CONTAINERS }}"
+  lineinfile:
+    path: /boot/cmdline.txt
+    regexp: '.*'
+    line: "{{ cmdln.stdout  + ENABLE_CONTAINERS }}"
+
+  # trim trailing newlines  
+#- name: "kill the trailing \\n newline..."
+#  debug:
+#    msg: "{{ lookup('file', '/boot/cmdline.txt' ) | trim }}"
+#  become_user: root
+
+# You may also need to make a reservation on your router's DHCP table  
+# so these addresses don't get given out to other devices on your network.
+  ## Enable bridge-nf-call-iptables  
+# sudo sysctl net.bridge.bridge-nf-call-iptables=1  
+
+

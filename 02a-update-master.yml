@@ -1,0 +1,43 @@
+---
+
+- hosts: "{{ MASTER_NODE }}"
+  gather_facts: yes
+  become: true
+  tasks:
+
+  - name: "verify {{ NODE_NAME }} ip exists in /etc/hosts on master"
+    lineinfile:
+      path: /etc/hosts
+      state: present
+      insertafter: '^# END ANSIBLE MANAGED BLOCK'
+      line: "{{ new_host_ip }} {{ new_hostname }}"
+
+  - name: "COPY ssh key : {{item}}"
+    shell: "ssh-copy-id -i /home/{{item}}/.ssh/{{item}}.pub {{item}}@{{ new_hostname }}"
+    with_items: "{{ SERVICE_ACCOUNTS }}"
+
+
+
+
+
+
+
+
+
+
+
+
+
+  # - name: Gather facts
+  #   setup:
+  #   register: ansible_facts_setup
+
+  # - name: Set Facts file variable
+  #   set_fact:
+  #   fact_file: /stage/redhat/snap/test/{{ ansible_hostname}}/{{ ansible_hostname }}_{{ tstamp }}-fct.txt
+
+  # - name: Add the facts to file
+  #   lineinfile:
+  #   line: "{{ ansible_facts_setup }}"
+  #   insertafter: EOF
+  #   dest: "{{ fact_file }}"

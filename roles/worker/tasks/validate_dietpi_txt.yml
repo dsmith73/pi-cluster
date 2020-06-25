@@ -1,0 +1,74 @@
+---
+# validate configuration settings in /boot/dietpi.txt  
+
+- name: "AUTO_SETUP_LOCALE"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^AUTO_SETUP_LOCALE=.+$'
+    line: 'AUTO_SETUP_LOCALE=en_US.UTF-8'
+
+- name: "AUTO_SETUP_KEYBOARD_LAYOUT"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^AUTO_SETUP_KEYBOARD_LAYOUT=.+$'
+    line: 'AUTO_SETUP_KEYBOARD_LAYOUT=us'
+
+- name: "AUTO_SETUP_TIMEZONE"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^AUTO_SETUP_TIMEZONE=.+$'
+    line: 'AUTO_SETUP_TIMEZONE=America/New_York'
+
+- name: "AUTO_SETUP_NET_ETHERNET_ENABLED"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^AUTO_SETUP_NET_ETHERNET_ENABLED=.+$'
+    line: 'AUTO_SETUP_NET_ETHERNET_ENABLED=1'
+
+- name: "AUTO_SETUP_NET_WIFI_ENABLED"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^AUTO_SETUP_NET_WIFI_ENABLED=.+$'
+    line: 'AUTO_SETUP_NET_WIFI_ENABLED=1'
+
+- name: "AUTO_SETUP_NET_STATIC_IP"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^AUTO_SETUP_NET_STATIC_IP=.+$'
+    line: 'AUTO_SETUP_NET_STATIC_IP={{ new_host_ip }}'
+
+- name: "AUTO_SETUP_NET_STATIC_GATEWAY"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^AUTO_SETUP_NET_STATIC_GATEWAY=.+$'
+    line: 'AUTO_SETUP_NET_STATIC_GATEWAY=10.11.0.1'
+
+- name: "AUTO_SETUP_NET_HOSTNAME"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^AUTO_SETUP_NET_HOSTNAME=.+$'
+    line: 'AUTO_SETUP_NET_HOSTNAME={{ new_hostname }}'
+
+- name: "AUTO_SETUP_HEADLESS"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^AUTO_SETUP_HEADLESS=.+$'
+    line: 'AUTO_SETUP_HEADLESS=1'
+
+- name: "AUTO_SETUP_AUTOMATED"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^AUTO_SETUP_AUTOMATED=.+$'
+    line: 'AUTO_SETUP_AUTOMATED=1'
+
+- name: "CONFIG_NTP_MODE"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^CONFIG_NTP_MODE=.+$'
+    line: 'CONFIG_NTP_MODE=3'
+
+- name: "CONFIG_WIFI_COUNTRY_CODE"
+  lineinfile:
+    path: /boot/dietpi.txt
+    regexp: '^CONFIG_WIFI_COUNTRY_CODE=.+$'
+    line: 'CONFIG_WIFI_COUNTRY_CODE=US'

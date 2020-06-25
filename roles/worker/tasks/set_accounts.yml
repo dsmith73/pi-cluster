@@ -1,0 +1,34 @@
+---
+
+- name: "ADD - {{ADMIN_GROUP}}"
+  group: 
+    name: "{{ADMIN_GROUP}}"
+    state: present
+    gid: 4444
+
+- name: "{{ item }} - yes"
+  user: 
+    name: "{{ item }}"
+    group: "{{ADMIN_GROUP}}"
+    append: yes
+    expires: -1
+    comment: "service account - {{ item }}"
+  with_items: "{{ SERVICE_ACCOUNTS }}"
+
+- name: "{{ADMIN_GROUP}} sudo - yes"
+  lineinfile: 
+    path: "/etc/sudoers.d/{{ ADMIN_GROUP }}"
+    regexp: '^%{{ADMIN_GROUP}}} ALL'
+    line: '%{{ADMIN_GROUP}} ALL=(ALL) NOPASSWD: ALL' 
+    state: present
+    validate: /usr/sbin/visudo -cf %s
+    create: yes
+
+- name: "ansible sudo - yes"
+  lineinfile:
+    path: /etc/sudoers.d/ansible
+    state: present
+    create: yes
+    regexp: '^ansible ALL='
+    line: 'ansible ALL=(ALL) NOPASSWD: ALL'
+    validate: /usr/sbin/visudo -cf %s

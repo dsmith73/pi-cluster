@@ -1,0 +1,31 @@
+---
+
+
+- name: "verify PubkeyAuthentication - yes"
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^\S+bkeyAuthentication\s\w+$'
+    line: PubkeyAuthentication yes
+  become_user: root
+
+- name: "validate - pubkeys"
+  block:
+    - name: "{{item}}.pub - present"
+      stat:
+        path: /home/{{item}}/.ssh/{{item}}.pub
+      register: p
+
+    - name: "{{item}}.pub - {{ p.stat.exists }}"
+      debug:
+        msg: "{{item}}.pub : {{ p.stat.exists }}"
+  with_items: "{{ SERVICE_ACCOUNTS }}"
+
+# - name: "verify PasswordAuthentication no"
+#   lineinfile:
+#     path: /etc/ssh/sshd_config
+#     regexp: '^\S+sswordAuthentication\s\w+$'
+#     line: PasswordAuthentication no
+#     backrefs: yes
+  # become_user: root
+
+

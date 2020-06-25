@@ -1,0 +1,51 @@
+---
+### Script to setup an individual raspberry pi, before joining to the cluster  
+# https://blog.alexellis.io/test-drive-k3s-on-raspberry-pi/  
+# https://www.youtube.com/watch?time_continue=150&v=qsy1Gwa-J5o&feature=emb_logo  
+# https://blog.alexellis.io/your-serverless-raspberry-pi-cluster/  
+# https://blog.alexellis.io/raspberry-pi-homelab-with-k3sup/  
+# https://github.com/teamserverless/k8s-on-raspbian/blob/master/GUIDE.md  
+# https://github.com/TranceCat/Raspberry-Pi-orchestration  
+
+
+- hosts: localhost
+  gather_facts: no
+  become: yes
+  tasks:
+    - name: "ensure python installed"
+      # don't forget to "chmod +x start_here.sh"  
+      shell: /{{ playbook_dir }}/start_here.sh
+
+
+- hosts: "{{ INITIAL_NODE_IP_ADDR }}"
+  gather_facts: no
+  become: yes
+  vars_files:
+    - vars.yml
+    - keys.yml
+  tasks:  
+  - include_role: 
+      name: worker
+
+  # verify hostname exists in /etc/hosts on Master node  
+    ## add if missing  
+  - name: "GET node_address"
+    debug:
+      msg: "{{ ansible_default_ipv4.address }}"
+    register: node_address
+
+  - name: "ASSIGN {{ node_address | first }} : {{ new_hostname }}"
+    set_fact:
+      node_ip: "{{ node_address | first }}" 
+
+
+- name: "verify {{ new_hostname }} ip exists in /etc/hosts on master"
+  import_playbook: 02a-update-master.yml
+
+
+- hosts: "{{ new_hostname }}"
+  gather_facts: yes
+  become: yes
+  tasks:
+  - include_tasks:
+      - /worker/tasks/set_pubkey.yml

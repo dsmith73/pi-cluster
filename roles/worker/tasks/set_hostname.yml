@@ -1,0 +1,72 @@
+---
+# set host info  
+  ## /etc/hostname  
+  ## /etc/hosts  
+
+# take new_hostname fact from new_node.yml and validate / update  
+- name: "VALIDATE - hostname - {{ new_hostname }}"
+  command: hostname
+  register: hostname
+
+- name: "UPDATE - hostname - {{ new_hostname }}"
+  block:
+  # verify hostname in /etc/hostname
+  - name: "Ensure {{ new_hostname }} is in /etc/hostname"
+    lineinfile:
+      path: /etc/hostname
+      regexp: '.*'
+      line: "{{ new_hostname }}"
+    when: ( hostname != new_hostname )
+
+  - name: "REMOVE - unmanaged localhost entries"
+    replace:
+      path: /etc/hosts
+      regexp: '^127.*$'
+      replace: ''
+
+  - name: "ADD - managed localhost entries"
+    blockinfile:
+      path: /etc/hosts
+      insertbefore: BOF
+      marker: "# {mark} ANSIBLE MANAGED BLOCK - {{ new_hostname }}"
+      block: |
+        127.0.0.1 localhost
+        127.0.0.1 {{ new_hostname }}
+
+  - name: "ADD - cluster master node entries"
+    lineinfile:
+      path: /etc/hosts
+      insertafter: '^# END ANSIBLE MANAGED BLOCK'
+      line: '{{ item }}'
+    with_items: 
+      - "{{ CLUSTER_MASTER_NODES }}"
+
+  - name: "ADD - cluster node entries"
+    lineinfile:
+      path: /etc/hosts
+      insertafter: '^# END ANSIBLE MANAGED BLOCK'
+      line: '{{ item }}'
+    with_items: 
+      - "{{ CLUSTER_NODES }}"
+
+- name: "UPDATE - /etc/network/interfaces"
+  replace:
+    path: /etc/network/interfaces
+    after: '^# Ethernet'
+    before: '^wireless-power'
+    regexp: '^.*'
+    replace: |
+      'allow-hotplug eth0
+      iface eth0 inet static
+      address {{ new_host_ip }}
+      netmask 255.255.255.0
+      gateway 10.11.0.1
+      #dns-nameservers 10.11.0.1
+
+      # WiFi
+      allow-hotplug wlan0
+      iface wlan0 inet dhcp
+      address {{ new_host_ip }}
+      netmask 255.255.255.0
+      gateway 10.11.0.1
+      #dns-nameservers 10.11.0.1'

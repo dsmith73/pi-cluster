@@ -1,0 +1,18 @@
+---
+
+
+# install docker  
+- name: "Install Docker"
+  shell: "curl -sSL https://get.docker.com | sh"
+
+- name: "join {{ new_hostname }} to docker swarm"
+  shell: "{{ JOIN_DOCKER_SWARM }}"
+
+# install k3s  
+  # /var/lib/rancher/k3s/server/node-token  
+- name: "install k3s and join {{ new_hostname }} to cluster"
+  shell: "curl -sfL https://get.k3s.io | K3S_URL=https://10.11.0.10:6443 K3S_TOKEN={{ JOIN_K3S_CLUSTER }} sh -"
+# set k3s to start with the --docker flag  
+  ## k3s will run docker through containerd  
+  ## I've chosen to leave k3s and Swarm separate for the time being  
+

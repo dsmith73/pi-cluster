@@ -1,0 +1,39 @@
+---
+
+INITIAL_NODE_NAME         : "n99"
+INITIAL_NODE_IP_ADDR      : "10.11.0.99"
+
+# Switch for creating new, or declaring host name and ip  
+CREATE_NEW                : false
+NODE_NAME                 : "n02"    
+
+
+CLUSTER_DOMAIN            : "ds"
+CLUSTER_IP_SUBNET         : '10.11.0.0'
+
+ENABLE_CONTAINERS         : " cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory"
+
+MASTER_NODE               : "master.ds"
+ADMIN_GROUP               : 'cluster_admin'
+SERVICE_ACCOUNTS:
+  - "ansible"
+  - "docker"
+  - "prometheus"
+  - "pi"
+
+# static var to handle hostnames < 10  
+lt_ten                    : [0,1,2,3,4,5,6,7,8,9]
+    
+CLUSTER_NODES:
+# ANSIBLE MANAGED CLUSTER
+  - "10.11.0.14 n04.ds"
+  - "10.11.0.11 n01.ds"
+  - "10.11.0.12 n02.ds"
+  - "10.11.0.13 n03.ds"
+
+CLUSTER_MASTER_NODES:
+  - "10.11.0.10 master.ds"
+
+
+
+
